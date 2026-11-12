@@ -53,7 +53,7 @@
     <!-- Category Filters & Visibility Toggle -->
     <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
       <div class="flex flex-wrap gap-2" id="categoryFilters">
-        <button onclick="filterCategory('ALL', event)" class="cat-btn bg-red-600 text-white px-3.5 py-1.5 rounded-full text-sm font-medium">All Gifts</button>
+        <button onclick="filterCategory('ALL', event)" class="cat-btn bg-red-600 text-white px-3.5 py-1.5 rounded-full text-sm font-medium">All Gifts (40)</button>
         <button onclick="filterCategory('Board Games', event)" class="cat-btn bg-slate-800 hover:bg-slate-700 text-slate-300 px-3.5 py-1.5 rounded-full text-sm font-medium">🎲 Board Games</button>
         <button onclick="filterCategory('Office & Coffee', event)" class="cat-btn bg-slate-800 hover:bg-slate-700 text-slate-300 px-3.5 py-1.5 rounded-full text-sm font-medium">☕ Office & Coffee</button>
         <button onclick="filterCategory('LEGO & Geek', event)" class="cat-btn bg-slate-800 hover:bg-slate-700 text-slate-300 px-3.5 py-1.5 rounded-full text-sm font-medium">🧩 LEGO & Geek</button>
@@ -82,58 +82,77 @@
 
   <script>
     // =========================================================================
-    // 1. CONFIGURATION: FIREBASE URL & PARTICIPANTS LIST (10 PEOPLE)
+    // 1. CONFIGURATION: FIREBASE URL & PARTICIPANTS LIST
     // =========================================================================
     const FIREBASE_DB_URL = "https://secret-santa-f5a09-default-rtdb.europe-west1.firebasedatabase.app"; 
-    const ADMIN_PIN = "2026"; // PIN required to reset/reshuffle the draw
+    const ADMIN_PIN = "2026";
 
-    // List of 10 Colleagues (Edit these names for your team)
+    // Team Participants List
     const PARTICIPANTS = [
-      "Emrah",
-      "Angel",
-      "Vinay",
-      "Georgi",
-      "Ivan",
-      "Maria",
-      "Elena",
-      "Dimitar",
-      "Nikolay",
-      "Petya"
+      "емрах",
+      "кирил р.",
+      "кирил а.",
+      "анатоли",
+      "ники",
+      "ели",
+      "калоян",
+      "деян",
+      "ангел"
     ];
 
     // =========================================================================
-    // 2. OZONE.BG GIFT POOL (~20 EUR / 40 BGN, AGES 28-42)
+    // 2. OZONE.BG EXTENDED GIFT POOL (40 ITEMS, ~20 EUR / 40 BGN, AGES 28-42)
     // =========================================================================
     const INITIAL_PRODUCTS = [
-      // Board & Card Games
+      // --- Board & Card Games (8 Items) ---
       { id: "p1", title: "Exploding Kittens (Card Game)", category: "Board Games", price: "~18 € (35 BGN)", desc: "Fast-paced, hilarious, and competitive card game—great for game nights.", query: "Експлодиращи котета" },
       { id: "p2", title: "Codenames (Party Word Game)", category: "Board Games", price: "~19 € (38 BGN)", desc: "One of the highest-rated social word deduction games for groups.", query: "Кодови имена" },
       { id: "p3", title: "Dixit Odyssey / Classic", category: "Board Games", price: "~20 € (40 BGN)", desc: "Award-winning creative storytelling game with illustrated cards.", query: "Dixit" },
       { id: "p4", title: "Dobble + Uno Flip! Combo", category: "Board Games", price: "~18 € (35 BGN)", desc: "Two quick-reflex and strategy card classics bundled together.", query: "Uno Flip" },
+      { id: "p5", title: "Taco Cat Goat Cheese Pizza", category: "Board Games", price: "~13 € (25 BGN)", desc: "Super fun, chaotic hand-slapping party card game for quick laughs.", query: "Тако Коте Коза Сирене Пица" },
+      { id: "p6", title: "Bears vs Babies (Card Game)", category: "Board Games", price: "~20 € (40 BGN)", desc: "From the creators of Exploding Kittens—build monster bears to battle babies.", query: "Bears vs Babies" },
+      { id: "p7", title: "Saboteur 1 & 2 (Card Game)", category: "Board Games", price: "~16 € (32 BGN)", desc: "Hidden roles, bluffing, and gold mining tunnel sabotage game for groups.", query: "Саботьор" },
+      { id: "p8", title: "Black Stories (Dark Riddles Game)", category: "Board Games", price: "~14 € (27 BGN)", desc: "50 lateral-thinking mystery riddles to solve together over drinks or coffee.", query: "Черни истории" },
 
-      // Office, Desk & Coffee
-      { id: "p5", title: "Kambukka / Contigo Thermal Mug", category: "Office & Coffee", price: "~20 € (39 BGN)", desc: "100% leak-proof stainless steel insulated travel mug for hot or cold drinks.", query: "Термочаша Kambukka" },
-      { id: "p6", title: "XL Extended Desk Mousepad (80x30 cm)", category: "Office & Coffee", price: "~16 € (32 BGN)", desc: "Water-resistant full-desk mat with minimalist, world map, or pop-culture themes.", query: "Подложка за мишка XL" },
-      { id: "p7", title: "3D / Heat-Changing Licensed Mug", category: "Office & Coffee", price: "~18 € (35 BGN)", desc: "Color-changing collector mug (LOTR, Star Wars, Marvel) paired with gourmet coffee.", query: "Термочувствителна чаша" },
-      { id: "p8", title: "Paperblanks / Moleskine Hardcover Notebook", category: "Office & Coffee", price: "~18 € (35 BGN)", desc: "Premium hardcover journal with intricate artwork for notes and planning.", query: "Тефтер Paperblanks" },
+      // --- Office, Desk & Coffee (8 Items) ---
+      { id: "p9", title: "Kambukka / Contigo Thermal Mug", category: "Office & Coffee", price: "~20 € (39 BGN)", desc: "100% leak-proof stainless steel insulated travel mug for hot or cold drinks.", query: "Термочаша Kambukka" },
+      { id: "p10", title: "XL Extended Desk Mousepad (80x30 cm)", category: "Office & Coffee", price: "~16 € (32 BGN)", desc: "Water-resistant full-desk mat with minimalist, world map, or pop-culture themes.", query: "Подложка за мишка XL" },
+      { id: "p11", title: "3D / Heat-Changing Licensed Mug", category: "Office & Coffee", price: "~18 € (35 BGN)", desc: "Color-changing collector mug (LOTR, Star Wars, Marvel) paired with coffee.", query: "Термочувствителна чаша" },
+      { id: "p12", title: "Paperblanks / Moleskine Hardcover Notebook", category: "Office & Coffee", price: "~18 € (35 BGN)", desc: "Premium hardcover journal with intricate artwork for notes and planning.", query: "Тефтер Paperblanks" },
+      { id: "p13", title: "French Press / Pour-Over Coffee Maker", category: "Office & Coffee", price: "~19 € (37 BGN)", desc: "Glass & stainless steel coffee press or drip brewer for rich office/home coffee.", query: "Френска преса" },
+      { id: "p14", title: "Ergonomic Memory Foam Wrist Rest", category: "Office & Coffee", price: "~16 € (32 BGN)", desc: "Comfortable keyboard and mouse wrist support pad for long coding/work sessions.", query: "Подложка за китка" },
+      { id: "p15", title: "Insulated Stainless Steel Water Bottle", category: "Office & Coffee", price: "~18 € (35 BGN)", desc: "Double-wall vacuum sports/office bottle keeping drinks cold for 24h.", query: "Термо бутилка" },
+      { id: "p16", title: "Desktop Mesh / Wooden Organizer", category: "Office & Coffee", price: "~15 € (30 BGN)", desc: "Keeps pens, sticky notes, phones, and desk accessories tidy and within reach.", query: "Органайзер за бюро" },
 
-      // LEGO & Geek
-      { id: "p9", title: "LEGO Botanicals: Cherry Blossoms / Lotus", category: "LEGO & Geek", price: "~15 € (29 BGN)", desc: "Build-your-own maintenance-free desk flowers from the LEGO Botanical collection.", query: "LEGO Botanicals" },
-      { id: "p10", title: "LEGO Speed Champions Supercar", category: "LEGO & Geek", price: "~20 € (40 BGN)", desc: "Detailed replica model from Ferrari, Porsche, McLaren, or Formula 1 series.", query: "LEGO Speed Champions" },
-      { id: "p11", title: "Funko Pop! Collector Vinyl Figure", category: "LEGO & Geek", price: "~16 € (32 BGN)", desc: "Pop-culture desk figure from favorite TV shows, movies, games, or music icons.", query: "Funko Pop" },
-      { id: "p12", title: "Metal Earth 3D Laser-Cut Metal Model", category: "LEGO & Geek", price: "~17 € (34 BGN)", desc: "Intricate glue-free 3D steel model kit for engineering and detail enthusiasts.", query: "Metal Earth" },
+      // --- LEGO & Geek (8 Items) ---
+      { id: "p17", title: "LEGO Botanicals: Cherry Blossoms / Lotus", category: "LEGO & Geek", price: "~15 € (29 BGN)", desc: "Build-your-own maintenance-free desk flowers from the LEGO Botanical collection.", query: "LEGO Botanicals" },
+      { id: "p18", title: "LEGO Speed Champions Supercar", category: "LEGO & Geek", price: "~20 € (40 BGN)", desc: "Detailed replica model from Ferrari, Porsche, McLaren, or Formula 1 series.", query: "LEGO Speed Champions" },
+      { id: "p19", title: "Funko Pop! Collector Vinyl Figure", category: "LEGO & Geek", price: "~16 € (32 BGN)", desc: "Pop-culture desk figure from favorite TV shows, movies, games, or music icons.", query: "Funko Pop" },
+      { id: "p20", title: "Metal Earth 3D Laser-Cut Metal Model", category: "LEGO & Geek", price: "~17 € (34 BGN)", desc: "Intricate glue-free 3D steel model kit for engineering and detail enthusiasts.", query: "Metal Earth" },
+      { id: "p21", title: "LEGO Technic Compact Vehicle Set", category: "LEGO & Geek", price: "~18 € (35 BGN)", desc: "Mechanical gears, steering, and functional engineering in a compact LEGO Technic build.", query: "LEGO Technic" },
+      { id: "p22", title: "Paladone Geek Icon Desk Lamp", category: "LEGO & Geek", price: "~19 € (37 BGN)", desc: "Ambient LED desk light shaped like PlayStation icons, Mario, or Star Wars.", query: "Лампа Paladone" },
+      { id: "p23", title: "Cable Guys Controller & Phone Holder", category: "LEGO & Geek", price: "~20 € (40 BGN)", desc: "Collectible character stand that holds your smartphone or gaming controller on your desk.", query: "Стойка Cable Guys" },
+      { id: "p24", title: "LEGO Star Wars / Marvel Microfighter", category: "LEGO & Geek", price: "~15 € (30 BGN)", desc: "Fun desk-sized spaceship or mech build with an iconic minifigure.", query: "LEGO Star Wars" },
 
-      // Tech & Everyday Gadgets
-      { id: "p13", title: "Baseus / Xiaomi 10,000 mAh Slim Powerbank", category: "Tech & Gadgets", price: "~19 € (38 BGN)", desc: "Compact fast-charging portable battery for travel and busy days.", query: "Външна батерия 10000" },
-      { id: "p14", title: "15W Fast Wireless Charging Desk Stand", category: "Tech & Gadgets", price: "~18 € (35 BGN)", desc: "Keeps your phone upright or horizontal on your desk while fast-charging.", query: "Безжично зарядно" },
-      { id: "p15", title: "Compact Portable Bluetooth Speaker", category: "Tech & Gadgets", price: "~20 € (40 BGN)", desc: "Pocket-sized water-resistant wireless speaker for home, balcony, or outdoor trips.", query: "Портативна тонколона" },
-      { id: "p16", title: "Travel Cable & Tech Organizer Pouch", category: "Tech & Gadgets", price: "~16 € (32 BGN)", desc: "Keeps chargers, USB-C cables, dongles, and adapters neatly organized in a backpack.", query: "Органайзер за кабели" },
+      // --- Tech & Everyday Gadgets (8 Items) ---
+      { id: "p25", title: "Baseus / Xiaomi 10,000 mAh Slim Powerbank", category: "Tech & Gadgets", price: "~19 € (38 BGN)", desc: "Compact fast-charging portable battery for travel and busy days.", query: "Външна батерия 10000" },
+      { id: "p26", title: "15W Fast Wireless Charging Desk Stand", category: "Tech & Gadgets", price: "~18 € (35 BGN)", desc: "Keeps your phone upright or horizontal on your desk while fast-charging.", query: "Безжично зарядно" },
+      { id: "p27", title: "Compact Portable Bluetooth Speaker", category: "Tech & Gadgets", price: "~20 € (40 BGN)", desc: "Pocket-sized water-resistant wireless speaker for home, balcony, or outdoor trips.", query: "Портативна тонколона" },
+      { id: "p28", title: "Travel Cable & Tech Organizer Pouch", category: "Tech & Gadgets", price: "~16 € (32 BGN)", desc: "Keeps chargers, USB-C cables, dongles, and adapters neatly organized in a backpack.", query: "Органайзер за кабели" },
+      { id: "p29", title: "Multi-Port USB-C Hub / Card Reader", category: "Tech & Gadgets", price: "~18 € (35 BGN)", desc: "Aluminum USB-C adapter expanding laptop ports for USB drives and accessories.", query: "USB-C хъб" },
+      { id: "p30", title: "Precision Magnetic Screwdriver Kit (24-in-1)", category: "Tech & Gadgets", price: "~17 € (33 BGN)", desc: "Sleek aluminum case with precision bits for electronics, laptops, watches, and DIY.", query: "Комплект отвертки" },
+      { id: "p31", title: "Laptop Cooling / Adjustable Aluminum Stand", category: "Tech & Gadgets", price: "~19 € (37 BGN)", desc: "Elevates laptop screen to eye level for better posture and airflow.", query: "Стойка за лаптоп" },
+      { id: "p32", title: "7-in-1 Electronics & AirPods Cleaning Kit", category: "Tech & Gadgets", price: "~14 € (27 BGN)", desc: "Keycap puller, high-density brush, and microfiber pen for mechanical keyboards and earbuds.", query: "Комплект за почистване на клавиатура" },
 
-      // Hobby, Books & Relaxation
-      { id: "p17", title: "Clementoni / Ravensburger 1000-Piece Puzzle", category: "Hobby & Books", price: "~16 € (32 BGN)", desc: "Premium adult jigsaw puzzle from the Museum Collection or landscape series.", query: "Пъзел 1000 части Clementoni" },
-      { id: "p18", title: "Paint by Numbers Canvas Kit (40x50 cm)", category: "Hobby & Books", price: "~15 € (30 BGN)", desc: "Includes framed canvas, brushes, and acrylic paints for a relaxing weekend activity.", query: "Рисуване по номера" },
-      { id: "p19", title: "Desktop Zen Garden / Executive Desk Toy", category: "Hobby & Books", price: "~17 € (33 BGN)", desc: "Calming kinetic or Zen desk accessory to unwind between meetings.", query: "Подарък за бюро" },
-      { id: "p20", title: "English Hardcover Bestseller Book", category: "Hobby & Books", price: "~18 € (35 BGN)", desc: "Hardcover edition in sci-fi, popular science, biography, or classic literature.", query: "Книги на английски" }
+      // --- Hobby, Books & Relaxation (8 Items) ---
+      { id: "p33", title: "Clementoni / Ravensburger 1000-Piece Puzzle", category: "Hobby & Books", price: "~16 € (32 BGN)", desc: "Premium adult jigsaw puzzle from the Museum Collection or landscape series.", query: "Пъзел 1000 части Clementoni" },
+      { id: "p34", title: "Paint by Numbers Canvas Kit (40x50 cm)", category: "Hobby & Books", price: "~15 € (30 BGN)", desc: "Includes framed canvas, brushes, and acrylic paints for a relaxing weekend activity.", query: "Рисуване по номера" },
+      { id: "p35", title: "ROKR 3D Wooden Mechanical Puzzle", category: "Hobby & Books", price: "~20 € (40 BGN)", desc: "Laser-cut wooden mechanical model kit with moving gears—no glue required.", query: "Дървен 3D пъзел ROKR" },
+      { id: "p36", title: "English Hardcover Bestseller Book", category: "Hobby & Books", price: "~18 € (35 BGN)", desc: "Hardcover edition in sci-fi, popular science, biography, or classic literature.", query: "Книги на английски" },
+      { id: "p37", title: "Hamayama Cast Metal Brainteaser Puzzle", category: "Hobby & Books", price: "~15 € (30 BGN)", desc: "Japanese Mensa-rated heavy metal mechanical brainteaser for your desk.", query: "Метален пъзел Hanayama" },
+      { id: "p38", title: "Aromatherapy Essential Oil Diffuser", category: "Hobby & Books", price: "~19 € (37 BGN)", desc: "Ultrasonic mist humidifier and aroma diffuser with ambient LED lighting.", query: "Арома дифузер" },
+      { id: "p39", title: "Swiss-Style Multi-Tool Pocket Knife", category: "Hobby & Books", price: "~20 € (40 BGN)", desc: "Compact everyday carry multi-tool for camping, hiking, and quick fixes.", query: "Мултитул" },
+      { id: "p40", title: "Wooden Chess / Backgammon Classic Set", category: "Hobby & Books", price: "~19 € (38 BGN)", desc: "Foldable wooden board game set for classic strategy matches.", query: "Дървен шах" }
     ];
 
     // =========================================================================
@@ -171,6 +190,16 @@
     }
 
     /**
+     * Verifies if the stored pairings match the current PARTICIPANTS list.
+     */
+    function isParticipantListOutdated(storedPairings) {
+      if (!storedPairings) return true;
+      const storedKeys = Object.keys(storedPairings);
+      if (storedKeys.length !== PARTICIPANTS.length) return true;
+      return !PARTICIPANTS.every(p => storedKeys.includes(p));
+    }
+
+    /**
      * Fetches the current state from Firebase (or localStorage if running in Demo Mode).
      */
     async function loadState() {
@@ -181,7 +210,7 @@
           const res = await fetch(`${FIREBASE_DB_URL}/secretSanta.json`);
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const data = await res.json();
-          if (!data || !data.pairings) {
+          if (!data || isParticipantListOutdated(data.pairings)) {
             appState = createInitialState();
             await saveState();
           } else {
@@ -195,12 +224,18 @@
         }
       } else {
         statusEl.innerHTML = "🟡 Mode: Local Demo (Set FIREBASE_DB_URL in code for multi-user sync)";
-        const saved = localStorage.getItem("secretSantaState_en_v1");
+        const saved = localStorage.getItem("secretSantaState_en_v2");
         if (saved) {
-          appState = JSON.parse(saved);
+          const parsed = JSON.parse(saved);
+          if (isParticipantListOutdated(parsed.pairings)) {
+            appState = createInitialState();
+            localStorage.setItem("secretSantaState_en_v2", JSON.stringify(appState));
+          } else {
+            appState = parsed;
+          }
         } else {
           appState = createInitialState();
-          localStorage.setItem("secretSantaState_en_v1", JSON.stringify(appState));
+          localStorage.setItem("secretSantaState_en_v2", JSON.stringify(appState));
         }
       }
       renderUI();
@@ -220,7 +255,7 @@
           alert("Error saving to Firebase! Check your Realtime Database Rules (.read / .write must be true).");
         }
       } else {
-        localStorage.setItem("secretSantaState_en_v1", JSON.stringify(appState));
+        localStorage.setItem("secretSantaState_en_v2", JSON.stringify(appState));
       }
     }
 
@@ -385,9 +420,9 @@
      * Admin function to reshuffle all Secret Santa pairings and clear claimed gifts.
      */
     async function resetAndInitializeDraw() {
-      const pin = prompt("Enter Admin PIN to reshuffle pairings and reset all claimed gifts (Default: 2026):");
+      const pin = prompt("Enter Admin PIN to reshuffle pairings and reset all claimed gifts:");
       if (pin !== ADMIN_PIN) {
-        if (pin !== null) alert("Invalid PIN!");
+        if (pin !== null) alert("Invalid Admin PIN!");
         return;
       }
       appState = createInitialState();
