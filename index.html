@@ -87,7 +87,7 @@
     const FIREBASE_DB_URL = "https://secret-santa-f5a09-default-rtdb.europe-west1.firebasedatabase.app"; 
     const ADMIN_PIN = "2026";
 
-    // Team Participants List (Note: Dots removed from keys because Firebase forbids '.' in JSON keys)
+    // Team Participants List (No dots in keys to comply with Firebase JSON key rules)
     const PARTICIPANTS = [
       "емрах",
       "кирил р",
@@ -101,58 +101,58 @@
     ];
 
     // =========================================================================
-    // 2. OZONE.BG EXTENDED GIFT POOL (40 ITEMS, ~20 EUR / 40 BGN, AGES 28-42)
+    // 2. OZONE.BG VERIFIED GIFT POOL (40 ITEMS WITH EXACT OZONE SEARCH QUERIES)
     // =========================================================================
     const INITIAL_PRODUCTS = [
       // --- Board & Card Games (8 Items) ---
       { id: "p1", title: "Exploding Kittens (Card Game)", category: "Board Games", price: "~18 € (35 BGN)", desc: "Fast-paced, hilarious, and competitive card game—great for game nights.", query: "Експлодиращи котета" },
-      { id: "p2", title: "Codenames (Party Word Game)", category: "Board Games", price: "~19 € (38 BGN)", desc: "One of the highest-rated social word deduction games for groups.", query: "Кодови имена" },
-      { id: "p3", title: "Dixit Odyssey / Classic", category: "Board Games", price: "~20 € (40 BGN)", desc: "Award-winning creative storytelling game with illustrated cards.", query: "Dixit" },
-      { id: "p4", title: "Dobble + Uno Flip! Combo", category: "Board Games", price: "~18 € (35 BGN)", desc: "Two quick-reflex and strategy card classics bundled together.", query: "Uno Flip" },
-      { id: "p5", title: "Taco Cat Goat Cheese Pizza", category: "Board Games", price: "~13 € (25 BGN)", desc: "Super fun, chaotic hand-slapping party card game for quick laughs.", query: "Тако Коте Коза Сирене Пица" },
-      { id: "p6", title: "Bears vs Babies (Card Game)", category: "Board Games", price: "~20 € (40 BGN)", desc: "From the creators of Exploding Kittens—build monster bears to battle babies.", query: "Bears vs Babies" },
-      { id: "p7", title: "Saboteur 1 & 2 (Card Game)", category: "Board Games", price: "~16 € (32 BGN)", desc: "Hidden roles, bluffing, and gold mining tunnel sabotage game for groups.", query: "Саботьор" },
-      { id: "p8", title: "Black Stories (Dark Riddles Game)", category: "Board Games", price: "~14 € (27 BGN)", desc: "50 lateral-thinking mystery riddles to solve together over drinks or coffee.", query: "Черни истории" },
+      { id: "p2", title: "Codenames (Кодови имена)", category: "Board Games", price: "~19 € (38 BGN)", desc: "Top-rated social word deduction party game for teams.", query: "Кодови имена" },
+      { id: "p3", title: "Dixit Board Game / Expansions", category: "Board Games", price: "~20 € (40 BGN)", desc: "Award-winning creative storytelling game with illustrated cards.", query: "Dixit" },
+      { id: "p4", title: "Dobble + Uno Card Game Combo", category: "Board Games", price: "~18 € (35 BGN)", desc: "Two quick-reflex and strategy card classics bundled together.", query: "Dobble" },
+      { id: "p5", title: "Throw Throw Burrito (Card Game)", category: "Board Games", price: "~20 € (40 BGN)", desc: "Dodgeball meets card game from the creators of Exploding Kittens.", query: "Throw Throw Burrito" },
+      { id: "p6", title: "Bears vs Babies (Card Game)", category: "Board Games", price: "~20 € (40 BGN)", desc: "Build hilarious monster bears to battle babies in this party card game.", query: "Bears vs Babies" },
+      { id: "p7", title: "Saboteur (Саботьор 1 & 2)", category: "Board Games", price: "~16 € (32 BGN)", desc: "Hidden roles, bluffing, and gold mining tunnel sabotage game for groups.", query: "Саботьор" },
+      { id: "p8", title: "Black Stories (Черни истории)", category: "Board Games", price: "~14 € (27 BGN)", desc: "50 lateral-thinking mystery riddles to solve together over drinks or coffee.", query: "Черни истории" },
 
       // --- Office, Desk & Coffee (8 Items) ---
-      { id: "p9", title: "Kambukka / Contigo Thermal Mug", category: "Office & Coffee", price: "~20 € (39 BGN)", desc: "100% leak-proof stainless steel insulated travel mug for hot or cold drinks.", query: "Термочаша Kambukka" },
-      { id: "p10", title: "XL Extended Desk Mousepad (80x30 cm)", category: "Office & Coffee", price: "~16 € (32 BGN)", desc: "Water-resistant full-desk mat with minimalist, world map, or pop-culture themes.", query: "Подложка за мишка XL" },
-      { id: "p11", title: "3D / Heat-Changing Licensed Mug", category: "Office & Coffee", price: "~18 € (35 BGN)", desc: "Color-changing collector mug (LOTR, Star Wars, Marvel) paired with coffee.", query: "Термочувствителна чаша" },
-      { id: "p12", title: "Paperblanks / Moleskine Hardcover Notebook", category: "Office & Coffee", price: "~18 € (35 BGN)", desc: "Premium hardcover journal with intricate artwork for notes and planning.", query: "Тефтер Paperblanks" },
-      { id: "p13", title: "French Press / Pour-Over Coffee Maker", category: "Office & Coffee", price: "~19 € (37 BGN)", desc: "Glass & stainless steel coffee press or drip brewer for rich office/home coffee.", query: "Френска преса" },
-      { id: "p14", title: "Ergonomic Memory Foam Wrist Rest", category: "Office & Coffee", price: "~16 € (32 BGN)", desc: "Comfortable keyboard and mouse wrist support pad for long coding/work sessions.", query: "Подложка за китка" },
-      { id: "p15", title: "Insulated Stainless Steel Water Bottle", category: "Office & Coffee", price: "~18 € (35 BGN)", desc: "Double-wall vacuum sports/office bottle keeping drinks cold for 24h.", query: "Термо бутилка" },
-      { id: "p16", title: "Desktop Mesh / Wooden Organizer", category: "Office & Coffee", price: "~15 € (30 BGN)", desc: "Keeps pens, sticky notes, phones, and desk accessories tidy and within reach.", query: "Органайзер за бюро" },
+      { id: "p9", title: "Kambukka Etna / Olympus Thermal Mug", category: "Office & Coffee", price: "~20 € (39 BGN)", desc: "100% leak-proof stainless steel insulated travel mug for hot or cold drinks.", query: "Kambukka" },
+      { id: "p10", title: "XL Extended Gaming / Desk Mousepad", category: "Office & Coffee", price: "~16 € (32 BGN)", desc: "Large 80x30cm stitched-edge desk mat (Cougar, Genesis, Razer, or Redragon).", query: "Геймърска подложка за мишка XL" },
+      { id: "p11", title: "ABYstyle / Paladone 3D Collector Mug", category: "Office & Coffee", price: "~15 € (30 BGN)", desc: "Heat-changing or 3D sculpted mug (LOTR, Star Wars, Marvel, Harry Potter).", query: "Чаша ABYstyle" },
+      { id: "p12", title: "Paperblanks Hardcover Art Journal", category: "Office & Coffee", price: "~18 € (35 BGN)", desc: "Premium hardcover notebook with intricate embossed artwork.", query: "Paperblanks" },
+      { id: "p13", title: "Moleskine Classic Hardcover Notebook", category: "Office & Coffee", price: "~19 € (37 BGN)", desc: "Iconic Moleskine notebook for daily engineering notes, sketches, and planning.", query: "Moleskine" },
+      { id: "p14", title: "Bialetti Moka Express / Coffee Maker", category: "Office & Coffee", price: "~20 € (40 BGN)", desc: "Classic Italian stovetop espresso maker or coffee press for rich morning brew.", query: "Bialetti" },
+      { id: "p15", title: "Chilly's / Kambukka Insulated Bottle", category: "Office & Coffee", price: "~19 € (38 BGN)", desc: "Double-wall thermal sports and office water bottle.", query: "Термо бутилка" },
+      { id: "p16", title: "Parker Jotter Stainless Steel Pen", category: "Office & Coffee", price: "~17 € (33 BGN)", desc: "Timeless stainless steel ballpoint pen in a gift box.", query: "Химикалка Parker" },
 
       // --- LEGO & Geek (8 Items) ---
       { id: "p17", title: "LEGO Botanicals: Cherry Blossoms / Lotus", category: "LEGO & Geek", price: "~15 € (29 BGN)", desc: "Build-your-own maintenance-free desk flowers from the LEGO Botanical collection.", query: "LEGO Botanicals" },
-      { id: "p18", title: "LEGO Speed Champions Supercar", category: "LEGO & Geek", price: "~20 € (40 BGN)", desc: "Detailed replica model from Ferrari, Porsche, McLaren, or Formula 1 series.", query: "LEGO Speed Champions" },
+      { id: "p18", title: "LEGO Speed Champions Supercar", category: "LEGO & Geek", price: "~20 € (40 BGN)", desc: "Detailed replica model from Ferrari, Porsche, McLaren, Aston Martin, or F1.", query: "LEGO Speed Champions" },
       { id: "p19", title: "Funko Pop! Collector Vinyl Figure", category: "LEGO & Geek", price: "~16 € (32 BGN)", desc: "Pop-culture desk figure from favorite TV shows, movies, games, or music icons.", query: "Funko Pop" },
-      { id: "p20", title: "Metal Earth 3D Laser-Cut Metal Model", category: "LEGO & Geek", price: "~17 € (34 BGN)", desc: "Intricate glue-free 3D steel model kit for engineering and detail enthusiasts.", query: "Metal Earth" },
-      { id: "p21", title: "LEGO Technic Compact Vehicle Set", category: "LEGO & Geek", price: "~18 € (35 BGN)", desc: "Mechanical gears, steering, and functional engineering in a compact LEGO Technic build.", query: "LEGO Technic" },
-      { id: "p22", title: "Paladone Geek Icon Desk Lamp", category: "LEGO & Geek", price: "~19 € (37 BGN)", desc: "Ambient LED desk light shaped like PlayStation icons, Mario, or Star Wars.", query: "Лампа Paladone" },
-      { id: "p23", title: "Cable Guys Controller & Phone Holder", category: "LEGO & Geek", price: "~20 € (40 BGN)", desc: "Collectible character stand that holds your smartphone or gaming controller on your desk.", query: "Стойка Cable Guys" },
-      { id: "p24", title: "LEGO Star Wars / Marvel Microfighter", category: "LEGO & Geek", price: "~15 € (30 BGN)", desc: "Fun desk-sized spaceship or mech build with an iconic minifigure.", query: "LEGO Star Wars" },
+      { id: "p20", title: "Metal Earth 3D Laser-Cut Steel Model", category: "LEGO & Geek", price: "~17 € (34 BGN)", desc: "Intricate glue-free 3D steel model kit for engineering and detail enthusiasts.", query: "Metal Earth" },
+      { id: "p21", title: "LEGO Technic Compact Vehicle Set", category: "LEGO & Geek", price: "~18 € (35 BGN)", desc: "Mechanical gears, steering, and functional engineering in a LEGO Technic build.", query: "LEGO Technic" },
+      { id: "p22", title: "Paladone Geek Icon LED Desk Lamp", category: "LEGO & Geek", price: "~19 € (37 BGN)", desc: "Ambient LED desk light shaped like PlayStation icons, Mario, Minecraft, or Star Wars.", query: "Лампа Paladone" },
+      { id: "p23", title: "Cable Guys Controller & Phone Holder", category: "LEGO & Geek", price: "~20 € (40 BGN)", desc: "Collectible character stand (Darth Vader, Deadpool, Sonic, Master Chief) for phones/gamepads.", query: "Cable Guys" },
+      { id: "p24", title: "LEGO Star Wars Buildable Set", category: "LEGO & Geek", price: "~18 € (35 BGN)", desc: "Desk-sized Star Wars starfighter, mech, or battle pack build.", query: "LEGO Star Wars" },
 
       // --- Tech & Everyday Gadgets (8 Items) ---
-      { id: "p25", title: "Baseus / Xiaomi 10,000 mAh Slim Powerbank", category: "Tech & Gadgets", price: "~19 € (38 BGN)", desc: "Compact fast-charging portable battery for travel and busy days.", query: "Външна батерия 10000" },
-      { id: "p26", title: "15W Fast Wireless Charging Desk Stand", category: "Tech & Gadgets", price: "~18 € (35 BGN)", desc: "Keeps your phone upright or horizontal on your desk while fast-charging.", query: "Безжично зарядно" },
-      { id: "p27", title: "Compact Portable Bluetooth Speaker", category: "Tech & Gadgets", price: "~20 € (40 BGN)", desc: "Pocket-sized water-resistant wireless speaker for home, balcony, or outdoor trips.", query: "Портативна тонколона" },
-      { id: "p28", title: "Travel Cable & Tech Organizer Pouch", category: "Tech & Gadgets", price: "~16 € (32 BGN)", desc: "Keeps chargers, USB-C cables, dongles, and adapters neatly organized in a backpack.", query: "Органайзер за кабели" },
-      { id: "p29", title: "Multi-Port USB-C Hub / Card Reader", category: "Tech & Gadgets", price: "~18 € (35 BGN)", desc: "Aluminum USB-C adapter expanding laptop ports for USB drives and accessories.", query: "USB-C хъб" },
-      { id: "p30", title: "Precision Magnetic Screwdriver Kit (24-in-1)", category: "Tech & Gadgets", price: "~17 € (33 BGN)", desc: "Sleek aluminum case with precision bits for electronics, laptops, watches, and DIY.", query: "Комплект отвертки" },
-      { id: "p31", title: "Laptop Cooling / Adjustable Aluminum Stand", category: "Tech & Gadgets", price: "~19 € (37 BGN)", desc: "Elevates laptop screen to eye level for better posture and airflow.", query: "Стойка за лаптоп" },
-      { id: "p32", title: "7-in-1 Electronics & AirPods Cleaning Kit", category: "Tech & Gadgets", price: "~14 € (27 BGN)", desc: "Keycap puller, high-density brush, and microfiber pen for mechanical keyboards and earbuds.", query: "Комплект за почистване на клавиатура" },
+      { id: "p25", title: "10,000 mAh Slim Fast-Charge Powerbank", category: "Tech & Gadgets", price: "~19 € (38 BGN)", desc: "Compact USB-C portable battery (Xiaomi, Baseus, Hama, or Trust).", query: "Външна батерия" },
+      { id: "p26", title: "15W Fast Wireless Charger Pad / Stand", category: "Tech & Gadgets", price: "~18 € (35 BGN)", desc: "Charges smartphones wirelessly on your office desk without plugging cables.", query: "Безжично зарядно" },
+      { id: "p27", title: "JBL GO / Niceboy Portable Bluetooth Speaker", category: "Tech & Gadgets", price: "~20 € (40 BGN)", desc: "Pocket-sized wireless speaker for home, balcony, or outdoor trips.", query: "Bluetooth колонка" },
+      { id: "p28", title: "Case Logic / Thule Tech & Flash Storage", category: "Tech & Gadgets", price: "~16 € (32 BGN)", desc: "Protective Case Logic organizer case or high-speed 128GB USB-C Flash Drive.", query: "Case Logic" },
+      { id: "p29", title: "Multi-Port USB-C Hub / Adapter", category: "Tech & Gadgets", price: "~18 € (35 BGN)", desc: "Aluminum USB-C hub expanding laptop ports for USB drives and accessories.", query: "USB хъб" },
+      { id: "p30", title: "Logitech Wireless Office Mouse", category: "Tech & Gadgets", price: "~18 € (35 BGN)", desc: "Reliable, silent-click compact wireless mouse for travel and laptop work.", query: "Безжична мишка Logitech" },
+      { id: "p31", title: "Ergonomic Laptop Cooling / Desk Stand", category: "Tech & Gadgets", price: "~19 € (37 BGN)", desc: "Elevates laptop screen to eye level for better posture and cooling airflow.", query: "Охладител за лаптоп" },
+      { id: "p32", title: "TWS Wireless Bluetooth Earbuds", category: "Tech & Gadgets", price: "~20 € (40 BGN)", desc: "Compact True Wireless in-ear headphones with charging case (Xiaomi / Niceboy / Philips).", query: "Безжични слушалки тапи" },
 
       // --- Hobby, Books & Relaxation (8 Items) ---
-      { id: "p33", title: "Clementoni / Ravensburger 1000-Piece Puzzle", category: "Hobby & Books", price: "~16 € (32 BGN)", desc: "Premium adult jigsaw puzzle from the Museum Collection or landscape series.", query: "Пъзел 1000 части Clementoni" },
+      { id: "p33", title: "Clementoni / Ravensburger 1000-Piece Puzzle", category: "Hobby & Books", price: "~16 € (32 BGN)", desc: "Premium adult jigsaw puzzle from the Museum Collection, Art, or Landscape series.", query: "Пъзел 1000 части Ravensburger" },
       { id: "p34", title: "Paint by Numbers Canvas Kit (40x50 cm)", category: "Hobby & Books", price: "~15 € (30 BGN)", desc: "Includes framed canvas, brushes, and acrylic paints for a relaxing weekend activity.", query: "Рисуване по номера" },
-      { id: "p35", title: "ROKR 3D Wooden Mechanical Puzzle", category: "Hobby & Books", price: "~20 € (40 BGN)", desc: "Laser-cut wooden mechanical model kit with moving gears—no glue required.", query: "Дървен 3D пъзел ROKR" },
-      { id: "p36", title: "English Hardcover Bestseller Book", category: "Hobby & Books", price: "~18 € (35 BGN)", desc: "Hardcover edition in sci-fi, popular science, biography, or classic literature.", query: "Книги на английски" },
-      { id: "p37", title: "Hanayama Cast Metal Brainteaser Puzzle", category: "Hobby & Books", price: "~15 € (30 BGN)", desc: "Japanese Mensa-rated heavy metal mechanical brainteaser for your desk.", query: "Метален пъзел Hanayama" },
-      { id: "p38", title: "Aromatherapy Essential Oil Diffuser", category: "Hobby & Books", price: "~19 € (37 BGN)", desc: "Ultrasonic mist humidifier and aroma diffuser with ambient LED lighting.", query: "Арома дифузер" },
-      { id: "p39", title: "Swiss-Style Multi-Tool Pocket Knife", category: "Hobby & Books", price: "~20 € (40 BGN)", desc: "Compact everyday carry multi-tool for camping, hiking, and quick fixes.", query: "Мултитул" },
-      { id: "p40", title: "Wooden Chess / Backgammon Classic Set", category: "Hobby & Books", price: "~19 € (38 BGN)", desc: "Foldable wooden board game set for classic strategy matches.", query: "Дървен шах" }
+      { id: "p35", title: "ROKR / Ugears 3D Wooden Mechanical Model", category: "Hobby & Books", price: "~20 € (40 BGN)", desc: "Laser-cut wooden mechanical model kit with moving gears—no glue required.", query: "ROKR" },
+      { id: "p36", title: "Taschen Art / Architecture / Film Hardcover Book", category: "Hobby & Books", price: "~18 € (35 BGN)", desc: "Illustrated collector hardcover book from Taschen (Art, Cinema, Design, Photography).", query: "Taschen" },
+      { id: "p37", title: "Huzzle / Hanayama Cast Metal Brainteaser", category: "Hobby & Books", price: "~15 € (30 BGN)", desc: "Japanese Mensa-rated heavy die-cast metal mechanical brainteaser for your desk.", query: "Huzzle" },
+      { id: "p38", title: "Book Nook / DIY Miniature Kit", category: "Hobby & Books", price: "~20 € (40 BGN)", desc: "Detailed 3D DIY craft kit or atmospheric bookshelf insert.", query: "Rolife" },
+      { id: "p39", title: "Victorinox Classic Swiss Pocket Knife", category: "Hobby & Books", price: "~20 € (40 BGN)", desc: "Original Swiss-made Victorinox multi-tool pocket knife for everyday carry.", query: "Victorinox" },
+      { id: "p40", title: "Wooden Chess & Backgammon Set", category: "Hobby & Books", price: "~19 € (38 BGN)", desc: "Foldable wooden board game set for classic chess and backgammon matches.", query: "Шах и табла" }
     ];
 
     // =========================================================================
@@ -224,18 +224,18 @@
         }
       } else {
         statusEl.innerHTML = "🟡 Mode: Local Demo (Set FIREBASE_DB_URL in code for multi-user sync)";
-        const saved = localStorage.getItem("secretSantaState_en_v3");
+        const saved = localStorage.getItem("secretSantaState_en_v4");
         if (saved) {
           const parsed = JSON.parse(saved);
           if (isParticipantListOutdated(parsed.pairings)) {
             appState = createInitialState();
-            localStorage.setItem("secretSantaState_en_v3", JSON.stringify(appState));
+            localStorage.setItem("secretSantaState_en_v4", JSON.stringify(appState));
           } else {
             appState = parsed;
           }
         } else {
           appState = createInitialState();
-          localStorage.setItem("secretSantaState_en_v3", JSON.stringify(appState));
+          localStorage.setItem("secretSantaState_en_v4", JSON.stringify(appState));
         }
       }
       renderUI();
@@ -256,7 +256,7 @@
           alert(`Firebase Error (${res.status}): ${errText}`);
         }
       } else {
-        localStorage.setItem("secretSantaState_en_v3", JSON.stringify(appState));
+        localStorage.setItem("secretSantaState_en_v4", JSON.stringify(appState));
       }
     }
 
