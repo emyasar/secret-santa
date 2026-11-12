@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎄 Secret Santa - Gift Picker & Matcher</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background-color: #0f172a; color: #f8fafc; font-family: 'Segoe UI', system-ui, sans-serif; }
+    .card-hover { transition: all 0.2s ease-in-out; }
+    .card-hover:hover { transform: translateY(-4px); box-shadow: 0 10px 25px -5px rgba(239, 68, 68, 0.2); }
+  </style>
+</head>
+<body class="min-h-screen pb-16">
+
+  <!-- Header Banner -->
+  <header class="bg-gradient-to-r from-red-800 via-red-700 to-amber-700 py-8 px-4 shadow-lg border-b border-red-600/40">
+    <div class="max-w-5xl mx-auto text-center">
+      <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-white">🎅 Secret Santa: Pick a Gift & Match!</h1>
+      <p class="mt-2 text-red-100 text-sm md:text-base">Budget: ~20 € (40 BGN) • Store: Ozone.bg • Claiming a gift locks it from the list and reveals your Secret Santa recipient!</p>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-4 mt-8">
+
+    <!-- Step 1: Participant Selection -->
+    <div class="bg-slate-800/90 border border-slate-700 rounded-xl p-6 shadow-md mb-8">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <label for="userSelect" class="block text-lg font-bold text-amber-400">Step 1: Select Your Name</label>
+          <p class="text-xs text-slate-400 mt-1">Please select your own name. Each participant can only claim 1 gift.</p>
+        </div>
+        <select id="userSelect" class="bg-slate-900 border border-slate-600 text-white rounded-lg px-4 py-3 text-base focus:outline-none focus:border-amber-400 min-w-[260px]">
+          <option value="">-- Select Your Name --</option>
+        </select>
+      </div>
+
+      <!-- Current User's Match Result Box (Visible if the user has already claimed a gift) -->
+      <div id="myResultBox" class="hidden mt-6 bg-gradient-to-r from-emerald-900/60 to-teal-900/60 border border-emerald-500/50 rounded-xl p-5">
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div>
+            <span class="text-xs uppercase tracking-wider bg-emerald-600 text-white px-2.5 py-1 rounded font-bold">Your Match is Confirmed!</span>
+            <h3 class="text-xl font-bold text-white mt-2">🎁 You are buying for: <span id="assignedTarget" class="text-amber-300 underline"></span></h3>
+            <p class="text-slate-200 mt-1">Selected Gift: <strong id="assignedGift" class="text-emerald-300"></strong></p>
+          </div>
+          <a id="ozoneLinkBtn" href="#" target="_blank" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-5 py-3 rounded-lg shadow transition shrink-0">
+            🛒 Find on Ozone.bg →
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Category Filters & Visibility Toggle -->
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+      <div class="flex flex-wrap gap-2" id="categoryFilters">
+        <button onclick="filterCategory('ALL', event)" class="cat-btn bg-red-600 text-white px-3.5 py-1.5 rounded-full text-sm font-medium">All Gifts</button>
+        <button onclick="filterCategory('Board Games', event)" class="cat-btn bg-slate-800 hover:bg-slate-700 text-slate-300 px-3.5 py-1.5 rounded-full text-sm font-medium">🎲 Board Games</button>
+        <button onclick="filterCategory('Office & Coffee', event)" class="cat-btn bg-slate-800 hover:bg-slate-700 text-slate-300 px-3.5 py-1.5 rounded-full text-sm font-medium">☕ Office & Coffee</button>
+        <button onclick="filterCategory('LEGO & Geek', event)" class="cat-btn bg-slate-800 hover:bg-slate-700 text-slate-300 px-3.5 py-1.5 rounded-full text-sm font-medium">🧩 LEGO & Geek</button>
+        <button onclick="filterCategory('Tech & Gadgets', event)" class="cat-btn bg-slate-800 hover:bg-slate-700 text-slate-300 px-3.5 py-1.5 rounded-full text-sm font-medium">💻 Tech & Gadgets</button>
+        <button onclick="filterCategory('Hobby & Books', event)" class="cat-btn bg-slate-800 hover:bg-slate-700 text-slate-300 px-3.5 py-1.5 rounded-full text-sm font-medium">🎨 Hobby & Books</button>
+      </div>
+
+      <label class="flex items-center gap-2 text-sm text-slate-400 cursor-pointer">
+        <input type="checkbox" id="hideClaimedToggle" checked onchange="renderProducts()" class="rounded bg-slate-800 border-slate-600 text-red-500">
+        <span>Hide claimed gifts</span>
+      </label>
+    </div>
+
+    <!-- Product Grid -->
+    <div id="productsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+
+    <!-- Admin Control & Status Footer -->
+    <div class="mt-16 pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
+      <div id="connectionStatus">⚡ Mode: Checking connection...</div>
+      <button onclick="resetAndInitializeDraw()" class="text-slate-400 hover:text-red-400 underline">
+        [Admin: Reshuffle Draw & Reset All Claims]
+      </button>
+    </div>
+
+  </main>
+
+  <script>
+    // =========================================================================
+    // 1. CONFIGURATION: FIREBASE URL & PARTICIPANTS LIST (10 PEOPLE)
+    // =========================================================================
+    const FIREBASE_DB_URL = "https://secret-santa-f5a09-default-rtdb.europe-west1.firebasedatabase.app"; 
+    const ADMIN_PIN = "2026"; // PIN required to reset/reshuffle the draw
+
+    // List of 10 Colleagues (Edit these names for your team)
+    const PARTICIPANTS = [
+      "Emrah",
+      "Angel",
+      "Vinay",
+      "Georgi",
+      "Ivan",
+      "Maria",
+      "Elena",
+      "Dimitar",
+      "Nikolay",
+      "Petya"
+    ];
+
+    // =========================================================================
+    // 2. OZONE.BG GIFT POOL (~20 EUR / 40 BGN, AGES 28-42)
+    // =========================================================================
+    const INITIAL_PRODUCTS = [
+      // Board & Card Games
+      { id: "p1", title: "Exploding Kittens (Card Game)", category: "Board Games", price: "~18 € (35 BGN)", desc: "Fast-paced, hilarious, and competitive card game—great for game nights.", query: "Експлодиращи котета" },
+      { id: "p2", title: "Codenames (Party Word Game)", category: "Board Games", price: "~19 € (38 BGN)", desc: "One of the highest-rated social word deduction games for groups.", query: "Кодови имена" },
+      { id: "p3", title: "Dixit Odyssey / Classic", category: "Board Games", price: "~20 € (40 BGN)", desc: "Award-winning creative storytelling game with illustrated cards.", query: "Dixit" },
+      { id: "p4", title: "Dobble + Uno Flip! Combo", category: "Board Games", price: "~18 € (35 BGN)", desc: "Two quick-reflex and strategy card classics bundled together.", query: "Uno Flip" },
+
+      // Office, Desk & Coffee
+      { id: "p5", title: "Kambukka / Contigo Thermal Mug", category: "Office & Coffee", price: "~20 € (39 BGN)", desc: "100% leak-proof stainless steel insulated travel mug for hot or cold drinks.", query: "Термочаша Kambukka" },
+      { id: "p6", title: "XL Extended Desk Mousepad (80x30 cm)", category: "Office & Coffee", price: "~16 € (32 BGN)", desc: "Water-resistant full-desk mat with minimalist, world map, or pop-culture themes.", query: "Подложка за мишка XL" },
+      { id: "p7", title: "3D / Heat-Changing Licensed Mug", category: "Office & Coffee", price: "~18 € (35 BGN)", desc: "Color-changing collector mug (LOTR, Star Wars, Marvel) paired with gourmet coffee.", query: "Термочувствителна чаша" },
+      { id: "p8", title: "Paperblanks / Moleskine Hardcover Notebook", category: "Office & Coffee", price: "~18 € (35 BGN)", desc: "Premium hardcover journal with intricate artwork for notes and planning.", query: "Тефтер Paperblanks" },
+
+      // LEGO & Geek
+      { id: "p9", title: "LEGO Botanicals: Cherry Blossoms / Lotus", category: "LEGO & Geek", price: "~15 € (29 BGN)", desc: "Build-your-own maintenance-free desk flowers from the LEGO Botanical collection.", query: "LEGO Botanicals" },
+      { id: "p10", title: "LEGO Speed Champions Supercar", category: "LEGO & Geek", price: "~20 € (40 BGN)", desc: "Detailed replica model from Ferrari, Porsche, McLaren, or Formula 1 series.", query: "LEGO Speed Champions" },
+      { id: "p11", title: "Funko Pop! Collector Vinyl Figure", category: "LEGO & Geek", price: "~16 € (32 BGN)", desc: "Pop-culture desk figure from favorite TV shows, movies, games, or music icons.", query: "Funko Pop" },
+      { id: "p12", title: "Metal Earth 3D Laser-Cut Metal Model", category: "LEGO & Geek", price: "~17 € (34 BGN)", desc: "Intricate glue-free 3D steel model kit for engineering and detail enthusiasts.", query: "Metal Earth" },
+
+      // Tech & Everyday Gadgets
+      { id: "p13", title: "Baseus / Xiaomi 10,000 mAh Slim Powerbank", category: "Tech & Gadgets", price: "~19 € (38 BGN)", desc: "Compact fast-charging portable battery for travel and busy days.", query: "Външна батерия 10000" },
+      { id: "p14", title: "15W Fast Wireless Charging Desk Stand", category: "Tech & Gadgets", price: "~18 € (35 BGN)", desc: "Keeps your phone upright or horizontal on your desk while fast-charging.", query: "Безжично зарядно" },
+      { id: "p15", title: "Compact Portable Bluetooth Speaker", category: "Tech & Gadgets", price: "~20 € (40 BGN)", desc: "Pocket-sized water-resistant wireless speaker for home, balcony, or outdoor trips.", query: "Портативна тонколона" },
+      { id: "p16", title: "Travel Cable & Tech Organizer Pouch", category: "Tech & Gadgets", price: "~16 € (32 BGN)", desc: "Keeps chargers, USB-C cables, dongles, and adapters neatly organized in a backpack.", query: "Органайзер за кабели" },
+
+      // Hobby, Books & Relaxation
+      { id: "p17", title: "Clementoni / Ravensburger 1000-Piece Puzzle", category: "Hobby & Books", price: "~16 € (32 BGN)", desc: "Premium adult jigsaw puzzle from the Museum Collection or landscape series.", query: "Пъзел 1000 части Clementoni" },
+      { id: "p18", title: "Paint by Numbers Canvas Kit (40x50 cm)", category: "Hobby & Books", price: "~15 € (30 BGN)", desc: "Includes framed canvas, brushes, and acrylic paints for a relaxing weekend activity.", query: "Рисуване по номера" },
+      { id: "p19", title: "Desktop Zen Garden / Executive Desk Toy", category: "Hobby & Books", price: "~17 € (33 BGN)", desc: "Calming kinetic or Zen desk accessory to unwind between meetings.", query: "Подарък за бюро" },
+      { id: "p20", title: "English Hardcover Bestseller Book", category: "Hobby & Books", price: "~18 € (35 BGN)", desc: "Hardcover edition in sci-fi, popular science, biography, or classic literature.", query: "Книги на английски" }
+    ];
+
+    // =========================================================================
+    // 3. APPLICATION STATE & SYNCHRONIZATION LOGIC
+    // =========================================================================
+    let appState = null;
+    let currentCategory = "ALL";
+
+    /**
+     * Generates a single-cycle derangement using Sattolo's algorithm.
+     * Guarantees that no participant draws their own name (no self-assignment)
+     * and everyone receives exactly one gift.
+     */
+    function generateDerangement(names) {
+      const shuffled = [...names];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * i); // 0 <= j < i
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      const pairs = {};
+      for (let i = 0; i < names.length; i++) {
+        pairs[names[i]] = shuffled[(i + 1) % shuffled.length];
+      }
+      return pairs;
+    }
+
+    /**
+     * Builds a fresh initial state with randomized pairings and empty claims.
+     */
+    function createInitialState() {
+      const pairings = generateDerangement(PARTICIPANTS);
+      const claims = {}; // { productId: "ParticipantName" }
+      const userSelections = {}; // { "ParticipantName": { productId, targetPerson, pickedAt } }
+      return { pairings, claims, userSelections, updatedAt: Date.now() };
+    }
+
+    /**
+     * Fetches the current state from Firebase (or localStorage if running in Demo Mode).
+     */
+    async function loadState() {
+      const statusEl = document.getElementById("connectionStatus");
+      if (FIREBASE_DB_URL) {
+        statusEl.innerHTML = "🟢 Mode: Live Cloud Sync (Firebase Realtime DB)";
+        try {
+          const res = await fetch(`${FIREBASE_DB_URL}/secretSanta.json`);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+          if (!data || !data.pairings) {
+            appState = createInitialState();
+            await saveState();
+          } else {
+            appState = data;
+            if (!appState.claims) appState.claims = {};
+            if (!appState.userSelections) appState.userSelections = {};
+          }
+        } catch (err) {
+          console.error("Failed to fetch state from Firebase:", err);
+          statusEl.innerHTML = "🔴 Firebase connection error! Ensure Database Rules allow read/write.";
+        }
+      } else {
+        statusEl.innerHTML = "🟡 Mode: Local Demo (Set FIREBASE_DB_URL in code for multi-user sync)";
+        const saved = localStorage.getItem("secretSantaState_en_v1");
+        if (saved) {
+          appState = JSON.parse(saved);
+        } else {
+          appState = createInitialState();
+          localStorage.setItem("secretSantaState_en_v1", JSON.stringify(appState));
+        }
+      }
+      renderUI();
+    }
+
+    /**
+     * Persists the current application state to Firebase or localStorage.
+     */
+    async function saveState() {
+      if (FIREBASE_DB_URL) {
+        const res = await fetch(`${FIREBASE_DB_URL}/secretSanta.json`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(appState)
+        });
+        if (!res.ok) {
+          alert("Error saving to Firebase! Check your Realtime Database Rules (.read / .write must be true).");
+        }
+      } else {
+        localStorage.setItem("secretSantaState_en_v1", JSON.stringify(appState));
+      }
+    }
+
+    /**
+     * Populates the participant dropdown menu and marks users who already picked a gift.
+     */
+    function populateUserDropdown() {
+      const select = document.getElementById("userSelect");
+      const currentVal = select.value;
+      select.innerHTML = `<option value="">-- Select Your Name (${PARTICIPANTS.length} Participants) --</option>`;
+      PARTICIPANTS.forEach(name => {
+        const hasPicked = appState?.userSelections?.[name];
+        const opt = document.createElement("option");
+        opt.value = name;
+        opt.textContent = hasPicked ? `${name} (✓ Claimed)` : name;
+        select.appendChild(opt);
+      });
+      if (currentVal) select.value = currentVal;
+    }
+
+    /**
+     * Filters the gift grid by category and updates active button styles.
+     */
+    function filterCategory(cat, ev) {
+      currentCategory = cat;
+      document.querySelectorAll(".cat-btn").forEach(btn => {
+        btn.className = "cat-btn bg-slate-800 hover:bg-slate-700 text-slate-300 px-3.5 py-1.5 rounded-full text-sm font-medium";
+      });
+      if (ev && ev.target) {
+        ev.target.className = "cat-btn bg-red-600 text-white px-3.5 py-1.5 rounded-full text-sm font-medium";
+      }
+      renderProducts();
+    }
+
+    /**
+     * Re-renders all UI components based on the latest state.
+     */
+    function renderUI() {
+      populateUserDropdown();
+      updateMyResultBox();
+      renderProducts();
+    }
+
+    /**
+     * Displays the matched recipient and gift details for the currently selected participant.
+     */
+    function updateMyResultBox() {
+      const currentUser = document.getElementById("userSelect").value;
+      const box = document.getElementById("myResultBox");
+      if (!currentUser || !appState?.userSelections?.[currentUser]) {
+        box.classList.add("hidden");
+        return;
+      }
+      const selection = appState.userSelections[currentUser];
+      const product = INITIAL_PRODUCTS.find(p => p.id === selection.productId);
+      document.getElementById("assignedTarget").textContent = selection.targetPerson;
+      document.getElementById("assignedGift").textContent = product ? `${product.title} (${product.price})` : "";
+      document.getElementById("ozoneLinkBtn").href = `https://www.ozone.bg/instantsearchplus/result/?q=${encodeURIComponent(product.query)}`;
+      box.classList.remove("hidden");
+    }
+
+    /**
+     * Renders the gift cards into the grid, hiding or locking claimed items.
+     */
+    function renderProducts() {
+      const grid = document.getElementById("productsGrid");
+      const hideClaimed = document.getElementById("hideClaimedToggle").checked;
+      grid.innerHTML = "";
+
+      INITIAL_PRODUCTS.forEach(prod => {
+        if (currentCategory !== "ALL" && prod.category !== currentCategory) return;
+
+        const claimedBy = appState?.claims?.[prod.id];
+        if (claimedBy && hideClaimed) return; // Hide item if claimed and toggle is checked
+
+        const card = document.createElement("div");
+        const isClaimed = Boolean(claimedBy);
+
+        card.className = `rounded-xl p-5 border flex flex-col justify-between ${
+          isClaimed 
+            ? "bg-slate-900/40 border-slate-800 opacity-50" 
+            : "bg-slate-800/80 border-slate-700 card-hover"
+        }`;
+
+        const ozoneSearchUrl = `https://www.ozone.bg/instantsearchplus/result/?q=${encodeURIComponent(prod.query)}`;
+
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between gap-2 mb-3">
+              <span class="text-xs font-semibold px-2.5 py-1 rounded bg-slate-700 text-amber-300">${prod.category}</span>
+              <span class="text-sm font-bold text-emerald-400">${prod.price}</span>
+            </div>
+            <h3 class="text-lg font-bold text-white leading-snug">${prod.title}</h3>
+            <p class="text-sm text-slate-300 mt-2">${prod.desc}</p>
+          </div>
+
+          <div class="mt-5 pt-4 border-t border-slate-700/60 flex items-center justify-between gap-2">
+            <a href="${ozoneSearchUrl}" target="_blank" class="text-xs text-slate-400 hover:text-amber-300 underline">
+              Preview on Ozone.bg ↗
+            </a>
+            ${
+              isClaimed
+                ? `<span class="text-xs bg-red-950 text-red-300 border border-red-800 px-3 py-1.5 rounded-lg font-semibold">🔒 Claimed</span>`
+                : `<button onclick="claimProduct('${prod.id}')" class="bg-red-600 hover:bg-red-500 text-white text-sm font-bold px-4 py-2 rounded-lg shadow transition">
+                     Claim & Match 🎲
+                   </button>`
+            }
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    /**
+     * Handles claiming a product, locking it globally, and revealing the Secret Santa recipient.
+     */
+    async function claimProduct(productId) {
+      const currentUser = document.getElementById("userSelect").value;
+      if (!currentUser) {
+        alert("Please select your name in 'Step 1' at the top of the page first!");
+        document.getElementById("userSelect").focus();
+        return;
+      }
+
+      // Sync latest state before writing to prevent race conditions
+      await loadState();
+
+      if (appState.userSelections && appState.userSelections[currentUser]) {
+        alert("You have already claimed a gift and received your match! Check the green confirmation box at the top.");
+        return;
+      }
+
+      if (appState.claims && appState.claims[productId]) {
+        alert("Too late! Another colleague just claimed this gift. Please pick another item from the list.");
+        return;
+      }
+
+      const product = INITIAL_PRODUCTS.find(p => p.id === productId);
+      const confirmPick = confirm(
+        `You are about to claim "${product.title}".\n\nOnce confirmed, this item will be removed from the list and your Secret Santa recipient will be revealed. Proceed?`
+      );
+      if (!confirmPick) return;
+
+      const targetPerson = appState.pairings[currentUser];
+
+      if (!appState.claims) appState.claims = {};
+      if (!appState.userSelections) appState.userSelections = {};
+
+      appState.claims[productId] = currentUser;
+      appState.userSelections[currentUser] = {
+        productId: productId,
+        targetPerson: targetPerson,
+        pickedAt: new Date().toISOString()
+      };
+
+      await saveState();
+      renderUI();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    /**
+     * Admin function to reshuffle all Secret Santa pairings and clear claimed gifts.
+     */
+    async function resetAndInitializeDraw() {
+      const pin = prompt("Enter Admin PIN to reshuffle pairings and reset all claimed gifts (Default: 2026):");
+      if (pin !== ADMIN_PIN) {
+        if (pin !== null) alert("Invalid PIN!");
+        return;
+      }
+      appState = createInitialState();
+      await saveState();
+      renderUI();
+      alert("Secret Santa draw has been reshuffled and all gifts have been reset!");
+    }
+
+    // Update match result banner when the user changes their selected name
+    document.getElementById("userSelect").addEventListener("change", () => {
+      updateMyResultBox();
+    });
+
+    // Initialize state on page load and poll every 10 seconds for live updates
+    loadState();
+    setInterval(loadState, 10000);
+  </script>
+</body>
+</html>
