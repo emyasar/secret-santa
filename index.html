@@ -87,11 +87,11 @@
     const FIREBASE_DB_URL = "https://secret-santa-f5a09-default-rtdb.europe-west1.firebasedatabase.app"; 
     const ADMIN_PIN = "2026";
 
-    // Team Participants List
+    // Team Participants List (Note: Dots removed from keys because Firebase forbids '.' in JSON keys)
     const PARTICIPANTS = [
       "емрах",
-      "кирил р.",
-      "кирил а.",
+      "кирил р",
+      "кирил а",
       "анатоли",
       "ники",
       "ели",
@@ -149,7 +149,7 @@
       { id: "p34", title: "Paint by Numbers Canvas Kit (40x50 cm)", category: "Hobby & Books", price: "~15 € (30 BGN)", desc: "Includes framed canvas, brushes, and acrylic paints for a relaxing weekend activity.", query: "Рисуване по номера" },
       { id: "p35", title: "ROKR 3D Wooden Mechanical Puzzle", category: "Hobby & Books", price: "~20 € (40 BGN)", desc: "Laser-cut wooden mechanical model kit with moving gears—no glue required.", query: "Дървен 3D пъзел ROKR" },
       { id: "p36", title: "English Hardcover Bestseller Book", category: "Hobby & Books", price: "~18 € (35 BGN)", desc: "Hardcover edition in sci-fi, popular science, biography, or classic literature.", query: "Книги на английски" },
-      { id: "p37", title: "Hamayama Cast Metal Brainteaser Puzzle", category: "Hobby & Books", price: "~15 € (30 BGN)", desc: "Japanese Mensa-rated heavy metal mechanical brainteaser for your desk.", query: "Метален пъзел Hanayama" },
+      { id: "p37", title: "Hanayama Cast Metal Brainteaser Puzzle", category: "Hobby & Books", price: "~15 € (30 BGN)", desc: "Japanese Mensa-rated heavy metal mechanical brainteaser for your desk.", query: "Метален пъзел Hanayama" },
       { id: "p38", title: "Aromatherapy Essential Oil Diffuser", category: "Hobby & Books", price: "~19 € (37 BGN)", desc: "Ultrasonic mist humidifier and aroma diffuser with ambient LED lighting.", query: "Арома дифузер" },
       { id: "p39", title: "Swiss-Style Multi-Tool Pocket Knife", category: "Hobby & Books", price: "~20 € (40 BGN)", desc: "Compact everyday carry multi-tool for camping, hiking, and quick fixes.", query: "Мултитул" },
       { id: "p40", title: "Wooden Chess / Backgammon Classic Set", category: "Hobby & Books", price: "~19 € (38 BGN)", desc: "Foldable wooden board game set for classic strategy matches.", query: "Дървен шах" }
@@ -220,22 +220,22 @@
           }
         } catch (err) {
           console.error("Failed to fetch state from Firebase:", err);
-          statusEl.innerHTML = "🔴 Firebase connection error! Ensure Database Rules allow read/write.";
+          statusEl.innerHTML = "🔴 Firebase connection error! Check console for details.";
         }
       } else {
         statusEl.innerHTML = "🟡 Mode: Local Demo (Set FIREBASE_DB_URL in code for multi-user sync)";
-        const saved = localStorage.getItem("secretSantaState_en_v2");
+        const saved = localStorage.getItem("secretSantaState_en_v3");
         if (saved) {
           const parsed = JSON.parse(saved);
           if (isParticipantListOutdated(parsed.pairings)) {
             appState = createInitialState();
-            localStorage.setItem("secretSantaState_en_v2", JSON.stringify(appState));
+            localStorage.setItem("secretSantaState_en_v3", JSON.stringify(appState));
           } else {
             appState = parsed;
           }
         } else {
           appState = createInitialState();
-          localStorage.setItem("secretSantaState_en_v2", JSON.stringify(appState));
+          localStorage.setItem("secretSantaState_en_v3", JSON.stringify(appState));
         }
       }
       renderUI();
@@ -252,10 +252,11 @@
           body: JSON.stringify(appState)
         });
         if (!res.ok) {
-          alert("Error saving to Firebase! Check your Realtime Database Rules (.read / .write must be true).");
+          const errText = await res.text();
+          alert(`Firebase Error (${res.status}): ${errText}`);
         }
       } else {
-        localStorage.setItem("secretSantaState_en_v2", JSON.stringify(appState));
+        localStorage.setItem("secretSantaState_en_v3", JSON.stringify(appState));
       }
     }
 
