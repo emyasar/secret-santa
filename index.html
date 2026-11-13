@@ -16,8 +16,11 @@
   <!-- Header Banner -->
   <header class="bg-gradient-to-r from-red-800 via-red-700 to-amber-700 py-8 px-4 shadow-lg border-b border-red-600/40">
     <div class="max-w-5xl mx-auto text-center">
+      <div class="inline-block bg-slate-900/60 text-amber-300 text-xs font-bold px-3 py-1 rounded-full mb-2 border border-amber-400/30">
+        🔒 PIN-Protected Mode Active
+      </div>
       <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-white">🎅 Secret Santa: Pick a Gift & Match!</h1>
-      <p class="mt-2 text-red-100 text-sm md:text-base">Budget: ~20 € (40 BGN) • Store: Ozone.bg • Claiming a gift locks it from the list and reveals your Secret Santa recipient!</p>
+      <p class="mt-2 text-red-100 text-sm md:text-base">Budget: ~20 € (40 BGN) • Store: Ozone.bg • Claiming a gift locks it from the list and privately reveals your Secret Santa recipient!</p>
     </div>
   </header>
 
@@ -28,18 +31,38 @@
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <label for="userSelect" class="block text-lg font-bold text-amber-400">Step 1: Select Your Name</label>
-          <p class="text-xs text-slate-400 mt-1">Please select your own name. Each participant can only claim 1 gift.</p>
+          <p class="text-xs text-slate-400 mt-1">Select your own name. Every claimed match is strictly locked with a personal PIN so nobody else can peek!</p>
         </div>
         <select id="userSelect" class="bg-slate-900 border border-slate-600 text-white rounded-lg px-4 py-3 text-base focus:outline-none focus:border-amber-400 min-w-[260px]">
           <option value="">-- Select Your Name --</option>
         </select>
       </div>
 
-      <!-- Current User's Match Result Box (Visible if the user has already claimed a gift) -->
+      <!-- Locked Box (Always shown by default when selecting a user who already claimed a gift) -->
+      <div id="lockedResultBox" class="hidden mt-6 bg-slate-900/95 border border-amber-500/50 rounded-xl p-5">
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div>
+            <span class="text-xs uppercase tracking-wider bg-amber-600 text-white px-2.5 py-1 rounded font-bold">🔒 Match Hidden (PIN Required)</span>
+            <h3 class="text-lg font-bold text-white mt-2">This participant has already claimed their gift!</h3>
+            <p class="text-xs text-slate-400 mt-1">To prevent spoilers, the recipient and gift are hidden. If this is you, enter your secret PIN to view your match:</p>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <input type="password" id="unlockPinInput" maxlength="10" placeholder="Enter PIN" class="bg-slate-800 border border-slate-600 text-white rounded-lg px-3 py-2 text-sm w-32 focus:outline-none focus:border-amber-400">
+            <button onclick="unlockMyMatch()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2 rounded-lg text-sm shadow transition">
+              🔓 Unlock
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Unlocked Match Result Box (Visible ONLY after entering the correct PIN or right after claiming) -->
       <div id="myResultBox" class="hidden mt-6 bg-gradient-to-r from-emerald-900/60 to-teal-900/60 border border-emerald-500/50 rounded-xl p-5">
         <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
-            <span class="text-xs uppercase tracking-wider bg-emerald-600 text-white px-2.5 py-1 rounded font-bold">Your Match is Confirmed!</span>
+            <div class="flex items-center gap-2">
+              <span class="text-xs uppercase tracking-wider bg-emerald-600 text-white px-2.5 py-1 rounded font-bold">🔓 Unlocked (Private View)</span>
+              <button onclick="lockMatchView()" class="text-xs text-slate-300 hover:text-white underline">Hide / Lock Now</button>
+            </div>
             <h3 class="text-xl font-bold text-white mt-2">🎁 You are buying for: <span id="assignedTarget" class="text-amber-300 underline"></span></h3>
             <p class="text-slate-200 mt-1">Selected Gift: <strong id="assignedGift" class="text-emerald-300"></strong></p>
           </div>
@@ -82,10 +105,11 @@
 
   <script>
     // =========================================================================
-    // 1. CONFIGURATION: FIREBASE URL & PARTICIPANTS LIST
+    // 1. CONFIGURATION: FIREBASE URL, DEFAULT PINS & PARTICIPANTS LIST
     // =========================================================================
     const FIREBASE_DB_URL = "https://secret-santa-f5a09-default-rtdb.europe-west1.firebasedatabase.app"; 
-    const ADMIN_PIN = "2026";
+    const ADMIN_PIN = "2026";        // Master Admin PIN (for resetting draw or master unlock)
+    const DEFAULT_USER_PIN = "9876"; // Default PIN for users who already claimed before PIN protection
 
     // Team Participants List (No dots in keys to comply with Firebase JSON key rules)
     const PARTICIPANTS = [
@@ -101,7 +125,7 @@
     ];
 
     // =========================================================================
-    // 2. OZONE.BG VERIFIED GIFT POOL (40 ITEMS WITH EXACT OZONE SEARCH QUERIES)
+    // 2. OZONE.BG GIFT POOL (40 ITEMS WITH VERIFIED OZONE SEARCH QUERIES)
     // =========================================================================
     const INITIAL_PRODUCTS = [
       // --- Board & Card Games (8 Items) ---
@@ -156,10 +180,12 @@
     ];
 
     // =========================================================================
-    // 3. APPLICATION STATE & SYNCHRONIZATION LOGIC
+    // 3. STRICT ZERO-LEAK PRIVACY & SYNCHRONIZATION LOGIC
     // =========================================================================
     let appState = null;
     let currentCategory = "ALL";
+    // Session-only unlocked user: resets immediately when switching dropdown names or refreshing!
+    let currentlyUnlockedUser = null;
 
     /**
      * Generates a single-cycle derangement using Sattolo's algorithm.
@@ -184,8 +210,8 @@
      */
     function createInitialState() {
       const pairings = generateDerangement(PARTICIPANTS);
-      const claims = {}; // { productId: "ParticipantName" }
-      const userSelections = {}; // { "ParticipantName": { productId, targetPerson, pickedAt } }
+      const claims = {}; // { productId: true } -> Anonymous lock
+      const userSelections = {}; // { "ParticipantName": { productId, targetPerson, pin, pickedAt } }
       return { pairings, claims, userSelections, updatedAt: Date.now() };
     }
 
@@ -201,6 +227,7 @@
 
     /**
      * Fetches the current state from Firebase (or localStorage if running in Demo Mode).
+     * Automatically assigns DEFAULT_USER_PIN ("9876") to any existing selections without a PIN.
      */
     async function loadState() {
       const statusEl = document.getElementById("connectionStatus");
@@ -217,6 +244,18 @@
             appState = data;
             if (!appState.claims) appState.claims = {};
             if (!appState.userSelections) appState.userSelections = {};
+
+            // Backfill default PIN "9876" for users who already claimed before PIN protection was added
+            let needsBackfillSave = false;
+            Object.keys(appState.userSelections).forEach(user => {
+              if (!appState.userSelections[user].pin) {
+                appState.userSelections[user].pin = DEFAULT_USER_PIN;
+                needsBackfillSave = true;
+              }
+            });
+            if (needsBackfillSave) {
+              await saveState();
+            }
           }
         } catch (err) {
           console.error("Failed to fetch state from Firebase:", err);
@@ -224,18 +263,18 @@
         }
       } else {
         statusEl.innerHTML = "🟡 Mode: Local Demo (Set FIREBASE_DB_URL in code for multi-user sync)";
-        const saved = localStorage.getItem("secretSantaState_en_v4");
+        const saved = localStorage.getItem("secretSantaState_en_v8");
         if (saved) {
           const parsed = JSON.parse(saved);
           if (isParticipantListOutdated(parsed.pairings)) {
             appState = createInitialState();
-            localStorage.setItem("secretSantaState_en_v4", JSON.stringify(appState));
+            localStorage.setItem("secretSantaState_en_v8", JSON.stringify(appState));
           } else {
             appState = parsed;
           }
         } else {
           appState = createInitialState();
-          localStorage.setItem("secretSantaState_en_v4", JSON.stringify(appState));
+          localStorage.setItem("secretSantaState_en_v8", JSON.stringify(appState));
         }
       }
       renderUI();
@@ -256,7 +295,7 @@
           alert(`Firebase Error (${res.status}): ${errText}`);
         }
       } else {
-        localStorage.setItem("secretSantaState_en_v4", JSON.stringify(appState));
+        localStorage.setItem("secretSantaState_en_v8", JSON.stringify(appState));
       }
     }
 
@@ -301,21 +340,58 @@
     }
 
     /**
-     * Displays the matched recipient and gift details for the currently selected participant.
+     * Unlocks a user's match box ONLY when they enter their personal PIN (or default 9876 if pre-existing).
+     */
+    function unlockMyMatch() {
+      const currentUser = document.getElementById("userSelect").value;
+      const inputPin = document.getElementById("unlockPinInput").value.trim();
+      const selection = appState?.userSelections?.[currentUser];
+      if (!selection) return;
+
+      const requiredPin = selection.pin || DEFAULT_USER_PIN;
+      if (inputPin === requiredPin || inputPin === ADMIN_PIN) {
+        currentlyUnlockedUser = currentUser;
+        document.getElementById("unlockPinInput").value = "";
+        updateMyResultBox();
+      } else {
+        alert("Incorrect PIN! You can only unlock your own Secret Santa match.");
+      }
+    }
+
+    /**
+     * Immediately hides/locks the match view.
+     */
+    function lockMatchView() {
+      currentlyUnlockedUser = null;
+      updateMyResultBox();
+    }
+
+    /**
+     * Displays either the locked prompt or the unlocked match details.
      */
     function updateMyResultBox() {
       const currentUser = document.getElementById("userSelect").value;
-      const box = document.getElementById("myResultBox");
+      const unlockedBox = document.getElementById("myResultBox");
+      const lockedBox = document.getElementById("lockedResultBox");
+
       if (!currentUser || !appState?.userSelections?.[currentUser]) {
-        box.classList.add("hidden");
+        unlockedBox.classList.add("hidden");
+        lockedBox.classList.add("hidden");
         return;
       }
-      const selection = appState.userSelections[currentUser];
-      const product = INITIAL_PRODUCTS.find(p => p.id === selection.productId);
-      document.getElementById("assignedTarget").textContent = selection.targetPerson;
-      document.getElementById("assignedGift").textContent = product ? `${product.title} (${product.price})` : "";
-      document.getElementById("ozoneLinkBtn").href = `https://www.ozone.bg/instantsearchplus/result/?q=${encodeURIComponent(product.query)}`;
-      box.classList.remove("hidden");
+
+      if (currentlyUnlockedUser === currentUser) {
+        lockedBox.classList.add("hidden");
+        const selection = appState.userSelections[currentUser];
+        const product = INITIAL_PRODUCTS.find(p => p.id === selection.productId);
+        document.getElementById("assignedTarget").textContent = selection.targetPerson;
+        document.getElementById("assignedGift").textContent = product ? `${product.title} (${product.price})` : "";
+        document.getElementById("ozoneLinkBtn").href = `https://www.ozone.bg/instantsearchplus/result/?q=${encodeURIComponent(product.query)}`;
+        unlockedBox.classList.remove("hidden");
+      } else {
+        unlockedBox.classList.add("hidden");
+        lockedBox.classList.remove("hidden");
+      }
     }
 
     /**
@@ -329,11 +405,10 @@
       INITIAL_PRODUCTS.forEach(prod => {
         if (currentCategory !== "ALL" && prod.category !== currentCategory) return;
 
-        const claimedBy = appState?.claims?.[prod.id];
-        if (claimedBy && hideClaimed) return; // Hide item if claimed and toggle is checked
+        const isClaimed = Boolean(appState?.claims?.[prod.id]);
+        if (isClaimed && hideClaimed) return;
 
         const card = document.createElement("div");
-        const isClaimed = Boolean(claimedBy);
 
         card.className = `rounded-xl p-5 border flex flex-col justify-between ${
           isClaimed 
@@ -371,7 +446,7 @@
     }
 
     /**
-     * Handles claiming a product, locking it globally, and revealing the Secret Santa recipient.
+     * Handles claiming a product, setting a personal PIN (defaults to 9876 if left as default), and revealing the recipient.
      */
     async function claimProduct(productId) {
       const currentUser = document.getElementById("userSelect").value;
@@ -385,7 +460,8 @@
       await loadState();
 
       if (appState.userSelections && appState.userSelections[currentUser]) {
-        alert("You have already claimed a gift and received your match! Check the green confirmation box at the top.");
+        alert("This name has already claimed a gift! Enter your PIN at the top to unlock and view your match.");
+        window.scrollTo({ top: 0, behavior: "smooth" });
         return;
       }
 
@@ -395,23 +471,29 @@
       }
 
       const product = INITIAL_PRODUCTS.find(p => p.id === productId);
-      const confirmPick = confirm(
-        `You are about to claim "${product.title}".\n\nOnce confirmed, this item will be removed from the list and your Secret Santa recipient will be revealed. Proceed?`
+      const userPin = prompt(
+        `You are claiming "${product.title}".\n\nEnter a personal 4-digit PIN to lock your match so nobody else can peek:`,
+        DEFAULT_USER_PIN
       );
-      if (!confirmPick) return;
 
+      if (userPin === null) return; // Cancelled
+
+      const cleanPin = userPin.trim() || DEFAULT_USER_PIN;
       const targetPerson = appState.pairings[currentUser];
 
       if (!appState.claims) appState.claims = {};
       if (!appState.userSelections) appState.userSelections = {};
 
-      appState.claims[productId] = currentUser;
+      // Anonymous claim lock
+      appState.claims[productId] = true;
       appState.userSelections[currentUser] = {
         productId: productId,
         targetPerson: targetPerson,
+        pin: cleanPin,
         pickedAt: new Date().toISOString()
       };
 
+      currentlyUnlockedUser = currentUser;
       await saveState();
       renderUI();
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -426,15 +508,23 @@
         if (pin !== null) alert("Invalid Admin PIN!");
         return;
       }
+      currentlyUnlockedUser = null;
       appState = createInitialState();
       await saveState();
       renderUI();
       alert("Secret Santa draw has been reshuffled and all gifts have been reset!");
     }
 
-    // Update match result banner when the user changes their selected name
+    // Whenever the user changes the dropdown name, immediately lock the view!
     document.getElementById("userSelect").addEventListener("change", () => {
+      currentlyUnlockedUser = null;
+      document.getElementById("unlockPinInput").value = "";
       updateMyResultBox();
+    });
+
+    // Allow pressing Enter inside the PIN input field to unlock
+    document.getElementById("unlockPinInput").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") unlockMyMatch();
     });
 
     // Initialize state on page load and poll every 10 seconds for live updates
